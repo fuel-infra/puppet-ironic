@@ -54,7 +54,7 @@ class ironic::conductor (
     package { 'ironic-conductor':
       ensure => $package_ensure,
       name   => $::ironic::params::conductor_package,
-      tag    => 'openstack',
+      tag    => ['openstack', 'ironic-package'],
     }
   }
 
@@ -70,6 +70,7 @@ class ironic::conductor (
     name      => $::ironic::params::conductor_service,
     enable    => $enabled,
     hasstatus => true,
+    tag       => 'ironic-service',
   }
 
 }
