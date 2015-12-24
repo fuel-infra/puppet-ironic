@@ -256,7 +256,6 @@ class ironic (
     ensure => $package_ensure,
     name   => $::ironic::params::common_package_name,
     tag    => ['openstack', 'ironic-package'],
-    notify => Exec['ironic-dbsync'],
   }
 
   validate_re($database_connection, '(sqlite|mysql|postgresql):\/\/(\S+:\S+@\S+\/\S+)?')
