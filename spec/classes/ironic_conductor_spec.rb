@@ -23,9 +23,10 @@ require 'spec_helper'
 describe 'ironic::conductor' do
 
   let :default_params do
-    { :package_ensure    => 'present',
-      :enabled           => true,
-      :max_time_interval => '120' }
+    { :package_ensure                => 'present',
+      :enabled                       => true,
+      :max_time_interval             => '120',
+      :force_power_state_during_sync => true }
   end
 
   let :params do
@@ -46,7 +47,6 @@ describe 'ironic::conductor' do
           :ensure => p[:package_ensure],
           :tag    => ['openstack', 'ironic-package'],
         )
-        is_expected.to contain_package('ironic-conductor').with_before(/Ironic_config\[.+\]/)
         is_expected.to contain_package('ironic-conductor').with_before(/Service\[ironic-conductor\]/)
       end
     end
@@ -60,14 +60,19 @@ describe 'ironic::conductor' do
 
     it 'configures ironic.conf' do
       is_expected.to contain_ironic_config('conductor/max_time_interval').with_value(p[:max_time_interval])
+      is_expected.to contain_ironic_config('conductor/force_power_state_during_sync').with_value(p[:force_power_state_during_sync])
     end
 
     context 'when overriding parameters' do
       before :each do
-        params.merge!(:max_time_interval => '50')
+        params.merge!(
+          :max_time_interval             => '50',
+          :force_power_state_during_sync => false
+        )
       end
       it 'should replace default parameter with new value' do
         is_expected.to contain_ironic_config('conductor/max_time_interval').with_value(p[:max_time_interval])
+        is_expected.to contain_ironic_config('conductor/force_power_state_during_sync').with_value(p[:force_power_state_during_sync])
       end
     end
 
@@ -75,7 +80,7 @@ describe 'ironic::conductor' do
 
   context 'on Debian platforms' do
     let :facts do
-      { :osfamily => 'Debian' }
+      @default_facts.merge({ :osfamily => 'Debian' })
     end
 
     let :platform_params do
@@ -88,7 +93,7 @@ describe 'ironic::conductor' do
 
   context 'on RedHat platforms' do
     let :facts do
-      { :osfamily => 'RedHat' }
+      @default_facts.merge({ :osfamily => 'RedHat' })
     end
 
     let :platform_params do

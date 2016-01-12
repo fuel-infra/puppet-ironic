@@ -32,10 +32,17 @@
 #   Should be an interger value
 #   Defaults to '120'.
 #
+# [*force_power_state_during_sync*]
+#   (optional) Should the hardware power state be set to the state recorded in
+#   the database (True) or should the database be updated based on the hardware
+#   state (False).
+#   Defaults to true.
+#
 class ironic::conductor (
-  $package_ensure    = 'present',
-  $enabled           = true,
-  $max_time_interval = '120'
+  $package_ensure                = 'present',
+  $enabled                       = true,
+  $max_time_interval             = '120',
+  $force_power_state_during_sync = true,
 ) {
 
   include ::ironic::params
@@ -45,12 +52,12 @@ class ironic::conductor (
   # Configure ironic.conf
   ironic_config {
     'conductor/max_time_interval': value => $max_time_interval;
+    'conductor/force_power_state_during_sync': value => $force_power_state_during_sync;
   }
 
   # Install package
   if $::ironic::params::conductor_package {
     Package['ironic-conductor'] -> Service['ironic-conductor']
-    Package['ironic-conductor'] -> Ironic_config<||>
     package { 'ironic-conductor':
       ensure => $package_ensure,
       name   => $::ironic::params::conductor_package,

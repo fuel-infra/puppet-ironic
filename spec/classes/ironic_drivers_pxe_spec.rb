@@ -23,14 +23,16 @@ require 'spec_helper'
 describe 'ironic::drivers::pxe' do
 
   let :default_params do
-    { :pxe_append_params    => 'nofb nomodeset vga=normal',
-      :pxe_config_template  => '$pybasedir/drivers/modules/pxe_config.template',
-      :pxe_deploy_timeout   => '0',
-      :tftp_server          => '$my_ip',
-      :tftp_root            => '/tftpboot',
-      :images_path          => '/var/lib/ironic/images/',
-      :tftp_master_path     => '/tftpboot/master_images',
-      :instance_master_path => '/var/lib/ironic/master_images' }
+    { :pxe_append_params        => 'nofb nomodeset vga=normal',
+      :pxe_config_template      => '$pybasedir/drivers/modules/pxe_config.template',
+      :pxe_deploy_timeout       => '0',
+      :tftp_server              => '$my_ip',
+      :tftp_root                => '/tftpboot',
+      :images_path              => '/var/lib/ironic/images/',
+      :tftp_master_path         => '/tftpboot/master_images',
+      :instance_master_path     => '/var/lib/ironic/master_images',
+      :uefi_pxe_bootfile_name   => 'elilo.efi',
+      :uefi_pxe_config_template => '$pybasedir/drivers/modules/elilo_efi_pxe_config.template' }
   end
 
   let :params do
@@ -51,21 +53,25 @@ describe 'ironic::drivers::pxe' do
       is_expected.to contain_ironic_config('pxe/images_path').with_value(p[:images_path])
       is_expected.to contain_ironic_config('pxe/tftp_master_path').with_value(p[:tftp_master_path])
       is_expected.to contain_ironic_config('pxe/instance_master_path').with_value(p[:instance_master_path])
+      is_expected.to contain_ironic_config('pxe/uefi_pxe_bootfile_name').with_value(p[:uefi_pxe_bootfile_name])
+      is_expected.to contain_ironic_config('pxe/uefi_pxe_config_template').with_value(p[:uefi_pxe_config_template])
     end
 
     context 'when overriding parameters' do
       before do
         params.merge!(
-          :deploy_kernel        => 'foo',
-          :deploy_ramdisk       => 'bar',
-          :pxe_append_params    => 'foo',
-          :pxe_config_template  => 'bar',
-          :pxe_deploy_timeout   => '40',
-          :tftp_server          => '192.168.0.1',
-          :tftp_root            => '/mnt/ftp',
-          :images_path          => '/mnt/images',
-          :tftp_master_path     => '/mnt/master_images',
-          :instance_master_path => '/mnt/ironic/master_images'
+          :deploy_kernel            => 'foo',
+          :deploy_ramdisk           => 'bar',
+          :pxe_append_params        => 'foo',
+          :pxe_config_template      => 'bar',
+          :pxe_deploy_timeout       => '40',
+          :tftp_server              => '192.168.0.1',
+          :tftp_root                => '/mnt/ftp',
+          :images_path              => '/mnt/images',
+          :tftp_master_path         => '/mnt/master_images',
+          :instance_master_path     => '/mnt/ironic/master_images',
+          :uefi_pxe_bootfile_name   => 'bootx64.efi',
+          :uefi_pxe_config_template => 'foo-uefi'
         )
       end
 
@@ -80,6 +86,8 @@ describe 'ironic::drivers::pxe' do
         is_expected.to contain_ironic_config('pxe/images_path').with_value(p[:images_path])
         is_expected.to contain_ironic_config('pxe/tftp_master_path').with_value(p[:tftp_master_path])
         is_expected.to contain_ironic_config('pxe/instance_master_path').with_value(p[:instance_master_path])
+        is_expected.to contain_ironic_config('pxe/uefi_pxe_bootfile_name').with_value(p[:uefi_pxe_bootfile_name])
+        is_expected.to contain_ironic_config('pxe/uefi_pxe_config_template').with_value(p[:uefi_pxe_config_template])
       end
     end
 
@@ -87,7 +95,7 @@ describe 'ironic::drivers::pxe' do
 
   context 'on Debian platforms' do
     let :facts do
-      { :osfamily => 'Debian' }
+      @default_facts.merge({ :osfamily => 'Debian' })
     end
 
     it_configures 'ironic pxe driver'
@@ -95,7 +103,7 @@ describe 'ironic::drivers::pxe' do
 
   context 'on RedHat platforms' do
     let :facts do
-      { :osfamily => 'RedHat' }
+      @default_facts.merge({ :osfamily => 'RedHat' })
     end
 
     it_configures 'ironic pxe driver'

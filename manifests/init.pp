@@ -52,7 +52,7 @@
 #
 # [*rpc_backend*]
 #   (optional) what rpc/queuing service to use
-#   Defaults to impl_kombu (rabbitmq)
+#   Defaults to rabbit (rabbitmq)
 #
 # [*rabbit_host*]
 #   (Optional) IP or hostname of the rabbit server.
@@ -110,57 +110,60 @@
 #   Use durable queues in amqp.
 #   (Optional) Defaults to false.
 #
-# [*rabbit_virtual_host*]
-#   (optional) Various rabbitmq settings
-#
 # [*rabbit_hosts*]
 #   (optional) array of rabbitmq servers for HA.
 #   A single IP address, such as a VIP, can be used for load-balancing
 #   multiple RabbitMQ Brokers.
 #   Defaults to false
 #
-# [*qpid_hostname*]
-# [*qpid_port*]
-# [*qpid_username*]
-# [*qpid_password*]
-# [*qpid_heartbeat*]
-# [*qpid_protocol*]
-# [*qpid_tcp_nodelay*]
-# [*qpid_reconnect*]
-# [*qpid_reconnect_timeout*]
-# [*qpid_reconnect_limit*]
-# [*qpid_reconnect_interval*]
-# [*qpid_reconnect_interval_min*]
-# [*qpid_reconnect_interval_max*]
-#   (optional) various QPID options
-#
 # [*use_syslog*]
 #   (optional) Use syslog for logging
-#   Defaults to false
+#   Defaults to undef.
 #
 # [*log_facility*]
 #   (optional) Syslog facility to receive log lines
-#   Defaults to LOG_USER
+#   Defaults to undef.
+#
+# [*use_stderr*]
+#   (optional) Use stderr for logging
+#   Defaults to undef.
+#
+# [*log_dir*]
+#   (optional) Directory where logs should be stored.
+#   If set to boolean false, it will not log to any directory.
+#   Defaults to undef.
 #
 # [*database_connection*]
 #   (optional) Connection url for the ironic database.
-#   Defaults to: sqlite:////var/lib/ironic/ironic.sqlite
+#   Defaults to: undef
 #
 # [*database_max_retries*]
 #   (optional) Database reconnection retry times.
-#   Defaults to: 10
+#   Defaults to: undef
 #
 # [*database_idle_timeout*]
 #   (optional) Timeout before idle db connections are reaped.
-#   Defaults to: 3600
+#   Defaults to: undef
 #
 # [*database_reconnect_interval*]
 #   (optional) Database reconnection interval in seconds.
-#   Defaults to: 10
+#   Defaults to: undef
 #
 # [*database_retry_interval*]
 #   (optional) Database reconnection interval in seconds.
-#   Defaults to: 10
+#   Defaults to: undef
+#
+# [*database_min_pool_size*]
+#   (optional) Minimum number of SQL connections to keep open in a pool.
+#   Defaults to: undef
+#
+# [*database_max_pool_size*]
+#   (optional) Maximum number of SQL connections to keep open in a pool.
+#   Defaults to: undef
+#
+# [*database_max_overflow*]
+#   (optional) If set, use this value for max_overflow with sqlalchemy.
+#   Defaults to: undef
 #
 # [*glance_api_servers*]
 #   (optional) A list of the glance api servers available to ironic.
@@ -179,21 +182,40 @@
 #   Enable dbsync
 #   Defaults to true
 #
+# DEPRECATED PARAMETERS
+#
+# [*qpid_hostname*]
+# [*qpid_port*]
+# [*qpid_username*]
+# [*qpid_password*]
+# [*qpid_heartbeat*]
+# [*qpid_protocol*]
+# [*qpid_tcp_nodelay*]
+# [*qpid_reconnect*]
+# [*qpid_reconnect_timeout*]
+# [*qpid_reconnect_limit*]
+# [*qpid_reconnect_interval*]
+# [*qpid_reconnect_interval_min*]
+# [*qpid_reconnect_interval_max*]
+#
 class ironic (
   $enabled                     = true,
   $package_ensure              = 'present',
-  $verbose                     = false,
-  $debug                       = false,
+  $verbose                     = undef,
+  $debug                       = undef,
+  $use_syslog                  = undef,
+  $use_stderr                  = undef,
+  $log_facility                = undef,
+  $log_dir                     = undef,
   $auth_strategy               = 'keystone',
   $enabled_drivers             = ['pxe_ipmitool'],
   $control_exchange            = 'openstack',
-  $rpc_backend                 = 'ironic.openstack.common.rpc.impl_kombu',
+  $rpc_backend                 = 'rabbit',
   $rabbit_hosts                = false,
   $rabbit_virtual_host         = '/',
   $rabbit_host                 = 'localhost',
   $rabbit_port                 = 5672,
   $rabbit_hosts                = false,
-  $rabbit_virtual_host         = '/',
   $rabbit_userid               = 'guest',
   $rabbit_password             = false,
   $rabbit_use_ssl              = false,
@@ -202,34 +224,39 @@ class ironic (
   $kombu_ssl_keyfile           = undef,
   $kombu_ssl_version           = 'TLSv1',
   $amqp_durable_queues         = false,
-  $qpid_hostname               = 'localhost',
-  $qpid_port                   = '5672',
-  $qpid_username               = 'guest',
-  $qpid_password               = 'guest',
-  $qpid_heartbeat              = 60,
-  $qpid_protocol               = 'tcp',
-  $qpid_tcp_nodelay            = true,
-  $qpid_reconnect              = true,
-  $qpid_reconnect_timeout      = 0,
-  $qpid_reconnect_limit        = 0,
-  $qpid_reconnect_interval_min = 0,
-  $qpid_reconnect_interval_max = 0,
-  $qpid_reconnect_interval     = 0,
   $use_syslog                  = false,
   $log_facility                = 'LOG_USER',
-  $database_connection         = 'sqlite:////var/lib/ironic/ovs.sqlite',
-  $database_max_retries        = '10',
-  $database_idle_timeout       = '3600',
-  $database_reconnect_interval = '10',
-  $database_retry_interval     = '10',
+  $database_connection         = undef,
+  $database_max_retries        = undef,
+  $database_idle_timeout       = undef,
+  $database_reconnect_interval = undef,
+  $database_retry_interval     = undef,
+  $database_min_pool_size      = undef,
+  $database_max_pool_size      = undef,
+  $database_max_overflow       = undef,
   $glance_api_servers          = undef,
   $glance_num_retries          = '0',
   $glance_api_insecure         = false,
   $sync_db                     = true,
   # DEPRECATED PARAMETERS
   $rabbit_user                 = undef,
+  $qpid_hostname               = undef,
+  $qpid_port                   = undef,
+  $qpid_username               = undef,
+  $qpid_password               = undef,
+  $qpid_heartbeat              = undef,
+  $qpid_protocol               = undef,
+  $qpid_tcp_nodelay            = undef,
+  $qpid_reconnect              = undef,
+  $qpid_reconnect_timeout      = undef,
+  $qpid_reconnect_limit        = undef,
+  $qpid_reconnect_interval_min = undef,
+  $qpid_reconnect_interval_max = undef,
+  $qpid_reconnect_interval     = undef,
 ) {
 
+  include ::ironic::logging
+  include ::ironic::db
   include ::ironic::params
 
   if $rabbit_user {
@@ -238,8 +265,6 @@ class ironic (
   } else {
     $rabbit_user_real = $rabbit_userid
   }
-
-  Package['ironic-common'] -> Ironic_config<||>
 
   file { '/etc/ironic':
     ensure  => directory,
@@ -258,33 +283,7 @@ class ironic (
     tag    => ['openstack', 'ironic-package'],
   }
 
-  validate_re($database_connection, '(sqlite|mysql|postgresql):\/\/(\S+:\S+@\S+\/\S+)?')
   validate_array($enabled_drivers)
-
-  case $database_connection {
-    /mysql:\/\/\S+:\S+@\S+\/\S+/: {
-      $database_backend_package = false
-      require 'mysql::bindings'
-      require 'mysql::bindings::python'
-    }
-    /postgresql:\/\/\S+:\S+@\S+\/\S+/: {
-      $database_backend_package = 'python-psycopg2'
-    }
-    /sqlite:\/\//: {
-      $database_backend_package = 'python-pysqlite2'
-    }
-    default: {
-      fail("Invalid database connection: ${database_connection}")
-    }
-  }
-
-  if $database_backend_package and !defined(Package[$database_backend_package]) {
-    package { 'ironic-database-backend':
-      ensure => present,
-      name   => $database_backend_package,
-      tag    => 'openstack',
-    }
-  }
 
   if is_array($glance_api_servers) {
     ironic_config {
@@ -297,15 +296,9 @@ class ironic (
   }
 
   ironic_config {
-    'DEFAULT/verbose':                 value => $verbose;
-    'DEFAULT/debug':                   value => $debug;
     'DEFAULT/auth_strategy':           value => $auth_strategy;
     'DEFAULT/rpc_backend':             value => $rpc_backend;
     'DEFAULT/enabled_drivers':         value => join($enabled_drivers, ',');
-    'database/connection':             value => $database_connection, secret => true;
-    'database/idle_timeout':           value => $database_idle_timeout;
-    'database/retry_interval':         value => $database_retry_interval;
-    'database/max_retries':            value => $database_max_retries;
     'glance/glance_num_retries':       value => $glance_num_retries;
     'glance/glance_api_insecure':      value => $glance_api_insecure;
   }
@@ -314,7 +307,7 @@ class ironic (
     include ::ironic::db::sync
   }
 
-  if $rpc_backend == 'ironic.openstack.common.rpc.impl_kombu' {
+  if $rpc_backend == 'ironic.openstack.common.rpc.impl_kombu' or $rpc_backend == 'rabbit' {
 
     if ! $rabbit_password {
       fail('When rpc_backend is rabbitmq, you must set rabbit password')
@@ -326,7 +319,7 @@ class ironic (
       'oslo_messaging_rabbit/rabbit_virtual_host': value => $rabbit_virtual_host;
       'oslo_messaging_rabbit/rabbit_use_ssl':      value => $rabbit_use_ssl;
       'DEFAULT/control_exchange':    value => $control_exchange;
-      'DEFAULT/amqp_durable_queues': value => $amqp_durable_queues;
+      'oslo_messaging_rabbit/amqp_durable_queues': value => $amqp_durable_queues;
     }
 
     if $rabbit_hosts {
@@ -371,33 +364,8 @@ class ironic (
     }
   }
 
-  if $rpc_backend == 'ironic.openstack.common.rpc.impl_qpid' {
-    ironic_config {
-      'DEFAULT/qpid_hostname':               value => $qpid_hostname;
-      'DEFAULT/qpid_port':                   value => $qpid_port;
-      'DEFAULT/qpid_username':               value => $qpid_username;
-      'DEFAULT/qpid_password':               value => $qpid_password, secret => true;
-      'DEFAULT/qpid_heartbeat':              value => $qpid_heartbeat;
-      'DEFAULT/qpid_protocol':               value => $qpid_protocol;
-      'DEFAULT/qpid_tcp_nodelay':            value => $qpid_tcp_nodelay;
-      'DEFAULT/qpid_reconnect':              value => $qpid_reconnect;
-      'DEFAULT/qpid_reconnect_timeout':      value => $qpid_reconnect_timeout;
-      'DEFAULT/qpid_reconnect_limit':        value => $qpid_reconnect_limit;
-      'DEFAULT/qpid_reconnect_interval_min': value => $qpid_reconnect_interval_min;
-      'DEFAULT/qpid_reconnect_interval_max': value => $qpid_reconnect_interval_max;
-      'DEFAULT/qpid_reconnect_interval':     value => $qpid_reconnect_interval;
-    }
-  }
-
-  if $use_syslog {
-    ironic_config {
-      'DEFAULT/use_syslog':           value => true;
-      'DEFAULT/syslog_log_facility':  value => $log_facility;
-    }
-  } else {
-    ironic_config {
-      'DEFAULT/use_syslog':           value => false;
-    }
+  if $rpc_backend == 'ironic.openstack.common.rpc.impl_qpid' or $rpc_backend == 'qpid' {
+    warning('Qpid driver is removed from Oslo.messaging in the Mitaka release')
   }
 
 }

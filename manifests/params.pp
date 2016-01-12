@@ -23,22 +23,42 @@ class ironic::params {
   $dbsync_command =
     'ironic-dbsync --config-file /etc/ironic/ironic.conf'
 
+  $inspector_dbsync_command =
+    'ironic-inspector-dbsync --config-file /etc/ironic-inspector/inspector.conf upgrade'
+
   case $::osfamily {
     'RedHat': {
-      $common_package_name = 'openstack-ironic-common'
-      $api_package         = 'openstack-ironic-api'
-      $api_service         = 'openstack-ironic-api'
-      $conductor_package   = 'openstack-ironic-conductor'
-      $conductor_service   = 'openstack-ironic-conductor'
-      $client_package      = 'python-ironicclient'
+      $common_package_name       = 'openstack-ironic-common'
+      $api_package               = 'openstack-ironic-api'
+      $api_service               = 'openstack-ironic-api'
+      $conductor_package         = 'openstack-ironic-conductor'
+      $conductor_service         = 'openstack-ironic-conductor'
+      $client_package            = 'python-ironicclient'
+      $inspector_package         = 'openstack-ironic-inspector'
+      $inspector_service         = 'openstack-ironic-inspector'
+      $inspector_dnsmasq_service = 'openstack-ironic-inspector-dnsmasq'
+      $sqlite_package_name       = undef
+      $pymysql_package_name      = undef
+      $ironic_wsgi_script_path   = '/var/www/cgi-bin/ironic'
+      $ironic_wsgi_script_source = '/usr/lib/python2.7/site-packages/ironic/api/app.wsgi'
     }
     'Debian': {
-      $common_package_name = 'ironic-common'
-      $api_service         = 'ironic-api'
-      $api_package         = 'ironic-api'
-      $conductor_service   = 'ironic-conductor'
-      $conductor_package   = 'ironic-conductor'
-      $client_package      = 'python-ironicclient'
+      $common_package_name       = 'ironic-common'
+      $api_service               = 'ironic-api'
+      $api_package               = 'ironic-api'
+      $conductor_service         = 'ironic-conductor'
+      $conductor_package         = 'ironic-conductor'
+      $client_package            = 'python-ironicclient'
+      $inspector_package         = 'ironic-inspector'
+      $inspector_service         = 'ironic-inspector'
+      # it seems like there is not currently a builtin dnsmasq in the debian packaging
+      # https://packages.debian.org/source/experimental/ironic-inspector
+      # this should be changed to whatever debian will use for dnsmasq
+      $inspector_dnsmasq_service = 'ironic-inspector-dnsmasq'
+      $sqlite_package_name       = 'python-pysqlite2'
+      $pymysql_package_name      = 'python-pymysql'
+      $ironic_wsgi_script_path   = '/usr/lib/cgi-bin/ironic'
+      $ironic_wsgi_script_source = '/usr/lib/python2.7/dist-packages/ironic/api/app.wsgi'
     }
     default: {
       fail("Unsupported osfamily ${::osfamily}")
